@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { useBudget } from "../../context/BudgetContext";
+import { useTranslation } from "react-i18next";
 import { CATEGORY_INFO } from "../../utils/constants";
 import { calculateMonthStats, formatMoney } from "../../utils/helpers";
 import {
@@ -9,7 +10,6 @@ import {
   FaTrash,
   FaPen,
   FaPlus,
-  FaThumbtack, // Putem înlocui cu FaSnowflake dacă vrei, dar Thumbtack e ok pt "Fixat"
   FaSyncAlt,
   FaSnowflake,
 } from "react-icons/fa";
@@ -24,24 +24,22 @@ const MonthCard = ({
   onDuplicate,
   onDelete,
 }) => {
+  const { t } = useTranslation();
   const { state, dispatch } = useBudget();
   const { defaultExpenses } = state;
   const [menuOpen, setMenuOpen] = useState(false);
   const stats = calculateMonthStats(month);
 
-  // 1. SORTARE: Cheltuielile FIXE (Recurente) apar primele
   const sortedExpenses = useMemo(() => {
     return [...month.expenses].sort((a, b) => {
       const aFixed = a.isFixed || a.note?.includes("Cheltuială fixă");
       const bFixed = b.isFixed || b.note?.includes("Cheltuială fixă");
-      // Dacă a e fix și b nu, a vine primul (-1)
       if (aFixed && !bFixed) return -1;
       if (!aFixed && bFixed) return 1;
-      return 0; // Păstrăm ordinea originală pentru restul
+      return 0;
     });
   }, [month.expenses]);
 
-  // Verificăm lipsuri recurente
   const hasMissingRecurring = defaultExpenses.some(
     (def) =>
       !month.expenses.some(
@@ -66,7 +64,6 @@ const MonthCard = ({
 
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden flex flex-col h-full shadow-md relative group/card hover:border-zinc-700 transition-colors">
-      {/* --- TOP BAR --- */}
       <div className="flex justify-between items-center px-5 pt-4">
         <div className="flex items-center gap-2">
           <span className="text-xs font-bold uppercase tracking-widest text-zinc-500 group-hover/card:text-zinc-400 transition-colors">
@@ -74,7 +71,6 @@ const MonthCard = ({
           </span>
           <div className={`w-2 h-2 rounded-full ${getStatusColor()}`}></div>
         </div>
-
         <div className="relative">
           <button
             onClick={() => setMenuOpen(!menuOpen)}
@@ -92,7 +88,7 @@ const MonthCard = ({
                   }}
                   className="w-full text-left px-4 py-3 text-sm text-zinc-300 hover:bg-zinc-800 flex gap-2 items-center"
                 >
-                  <FaWallet /> Modifică Buget
+                  <FaWallet /> {t("month_card.menu.edit_budget")}
                 </button>
                 <button
                   onClick={() => {
@@ -101,7 +97,7 @@ const MonthCard = ({
                   }}
                   className="w-full text-left px-4 py-3 text-sm text-zinc-300 hover:bg-zinc-800 flex gap-2 items-center"
                 >
-                  <FaCopy /> Duplică Luna
+                  <FaCopy /> {t("month_card.menu.duplicate")}
                 </button>
                 <div className="h-px bg-zinc-800"></div>
                 <button
@@ -111,7 +107,7 @@ const MonthCard = ({
                   }}
                   className="w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 flex gap-2 items-center"
                 >
-                  <FaTrash /> Șterge Luna
+                  <FaTrash /> {t("month_card.menu.delete")}
                 </button>
               </div>
             )}
@@ -119,7 +115,6 @@ const MonthCard = ({
         </div>
       </div>
 
-      {/* --- HERO SECTION --- */}
       <div className="px-5 py-4 flex justify-between items-center gap-4 border-b border-zinc-800/50">
         <div className="flex-1">
           <div
@@ -130,9 +125,13 @@ const MonthCard = ({
             {formatMoney(stats.remaining).ron}
           </div>
           <div className="text-xs text-zinc-500 mt-1 flex gap-2">
-            <span>Disponibil din {formatMoney(month.budget, false)}</span>
+            <span>
+              {t("month_card.available_of")} {formatMoney(month.budget, false)}
+            </span>
             <span className="text-zinc-600">|</span>
-            <span>Cheltuit: {stats.totalSpent}</span>
+            <span>
+              {t("month_card.spent")}: {stats.totalSpent}
+            </span>
           </div>
           <div className="w-full bg-zinc-800 h-1.5 rounded-full mt-3 overflow-hidden">
             <div
@@ -141,7 +140,6 @@ const MonthCard = ({
             ></div>
           </div>
         </div>
-
         <button
           onClick={() => onAddExpense(month.id)}
           className="flex-shrink-0 w-14 h-14 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl flex items-center justify-center text-xl shadow-lg transition-colors border border-emerald-400/20"
@@ -151,7 +149,6 @@ const MonthCard = ({
         </button>
       </div>
 
-      {/* --- BUTON SINCRONIZARE --- */}
       {hasMissingRecurring && (
         <div className="px-5 pt-3 pb-1 animate-fade-in-down">
           <button
@@ -163,57 +160,46 @@ const MonthCard = ({
             }
             className="w-full py-2 bg-cyan-900/20 hover:bg-cyan-900/40 border border-cyan-500/30 rounded-lg text-cyan-300 text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_10px_rgba(34,211,238,0.1)]"
           >
-            <FaSyncAlt className="animate-spin-slow" />
-            Adaugă cheltuieli recurente lipsă
+            <FaSyncAlt className="animate-spin-slow" />{" "}
+            {t("month_card.sync_btn")}
           </button>
         </div>
       )}
 
-      {/* --- EXPENSES LIST --- */}
       <div className="flex-1 bg-zinc-900/50 overflow-y-auto custom-scrollbar p-3 space-y-2">
         {sortedExpenses.length === 0 ? (
           <div className="text-center py-10 text-zinc-600">
-            <div className="text-lg font-medium">Nicio cheltuială</div>
+            <div className="text-lg font-medium">
+              {t("month_card.empty_state")}
+            </div>
           </div>
         ) : (
           sortedExpenses.map((exp, idx) => {
             const isFixed =
               exp.isFixed || exp.note?.includes("Cheltuială fixă");
-
             return (
               <div
                 key={exp.id || idx}
                 onClick={() => onViewExpense(month, exp, idx)}
-                className={`
-                    relative flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all duration-300
-                    ${
-                      isFixed
-                        ? // --- DESIGN FROZEN ---
-                          "bg-cyan-950/20 border-cyan-400/20 shadow-[0_0_15px_-5px_rgba(6,182,212,0.15)] hover:border-cyan-400/40 hover:bg-cyan-900/30 hover:shadow-cyan-400/20 group"
-                        : // --- DESIGN STANDARD ---
-                          "bg-transparent border-transparent hover:bg-zinc-800 hover:border-zinc-700 group"
-                    }
-                `}
+                className={`relative flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all duration-300 ${
+                  isFixed
+                    ? "bg-cyan-950/20 border-cyan-400/20 shadow-[0_0_15px_-5px_rgba(6,182,212,0.15)] hover:border-cyan-400/40 hover:bg-cyan-900/30 hover:shadow-cyan-400/20 group"
+                    : "bg-transparent border-transparent hover:bg-zinc-800 hover:border-zinc-700 group"
+                }`}
               >
-                {/* Glow subtil pentru Frozen */}
                 {isFixed && (
                   <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 to-transparent rounded-xl pointer-events-none" />
                 )}
-
                 <div className="flex items-center gap-4 min-w-0 relative z-10">
                   <div
-                    className={`
-                        w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 transition-colors
-                        ${
-                          isFixed
-                            ? "bg-cyan-500/10 text-cyan-300 shadow-inner border border-cyan-500/10"
-                            : "bg-zinc-800 text-zinc-400"
-                        }
-                    `}
+                    className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 transition-colors ${
+                      isFixed
+                        ? "bg-cyan-500/10 text-cyan-300 shadow-inner border border-cyan-500/10"
+                        : "bg-zinc-800 text-zinc-400"
+                    }`}
                   >
                     {CATEGORY_INFO[exp.category]?.emoji || "📦"}
                   </div>
-
                   <div className="min-w-0">
                     <div
                       className={`text-lg font-medium truncate ${
@@ -226,7 +212,6 @@ const MonthCard = ({
                     </div>
                     <div className="text-xs text-zinc-500 flex items-center gap-2">
                       {isFixed && (
-                        // Iconiță de "Gheață/Fixat"
                         <FaSnowflake className="text-cyan-400 text-[10px] animate-pulse-slow" />
                       )}
                       <span
@@ -234,13 +219,13 @@ const MonthCard = ({
                           isFixed ? "text-cyan-500/70" : ""
                         }`}
                       >
-                        {CATEGORY_INFO[exp.category]?.name}
+                        {t(`categories.${exp.category}`) ||
+                          CATEGORY_INFO[exp.category]?.name}
                       </span>
                       <span className="text-zinc-600">• {exp.date}</span>
                     </div>
                   </div>
                 </div>
-
                 <div className="flex flex-col items-end gap-1 relative z-10">
                   <span
                     className={`text-xl font-mono font-bold ${
@@ -249,7 +234,6 @@ const MonthCard = ({
                   >
                     -{exp.val}
                   </span>
-
                   <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={(e) => {

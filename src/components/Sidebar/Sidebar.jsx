@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useBudget } from "../../context/BudgetContext";
+import { useTranslation } from "react-i18next";
 import { CATEGORY_INFO } from "../../utils/constants";
 import { calculateRunningBalance } from "../../utils/helpers";
 import {
@@ -15,18 +16,19 @@ import {
   FaExchangeAlt,
   FaCalculator,
   FaTable,
+  FaChartLine,
 } from "react-icons/fa";
 import jsPDF from "jspdf";
 import Modal from "../Common/Modal";
 
 const Sidebar = ({ onAddDefault, onExport, onImport }) => {
+  const { t } = useTranslation();
   const { state, dispatch } = useBudget();
   const { months, defaultExpenses = [], activeTab } = state;
 
   const [defDesc, setDefDesc] = useState("");
   const [defCost, setDefCost] = useState("");
   const [defCategory, setDefCategory] = useState("housing");
-
   const [showCalc, setShowCalc] = useState(false);
   const [calcData, setCalcData] = useState({
     initial: 1000,
@@ -37,13 +39,14 @@ const Sidebar = ({ onAddDefault, onExport, onImport }) => {
   const [calcResult, setCalcResult] = useState(null);
 
   const tabs = [
-    { id: "dashboard", icon: FaHome, label: "Dashboard" },
-    { id: "reports", icon: FaTable, label: "Rapoarte Avansate" },
-    { id: "compare", icon: FaExchangeAlt, label: "Compară Luni" },
-    { id: "calendar", icon: FaCalendarAlt, label: "Calendar" },
-    { id: "goals", icon: FaBullseye, label: "Obiective" },
-    { id: "debts", icon: FaHandHoldingUsd, label: "Datorii" },
-    { id: "insights", icon: FaLightbulb, label: "Insights" },
+    { id: "dashboard", icon: FaHome, label: t("sidebar.dashboard") },
+    { id: "investments", icon: FaChartLine, label: t("sidebar.savings") },
+    { id: "reports", icon: FaTable, label: t("sidebar.reports") },
+    { id: "compare", icon: FaExchangeAlt, label: t("sidebar.compare") },
+    { id: "calendar", icon: FaCalendarAlt, label: t("sidebar.calendar") },
+    { id: "goals", icon: FaBullseye, label: t("sidebar.goals") },
+    { id: "debts", icon: FaHandHoldingUsd, label: t("sidebar.debts") },
+    { id: "insights", icon: FaLightbulb, label: t("sidebar.insights") },
   ];
 
   const totalSaved = calculateRunningBalance(months);
@@ -79,61 +82,42 @@ const Sidebar = ({ onAddDefault, onExport, onImport }) => {
       .replace(/Ț/g, "T");
   };
 
-  // --- EXECUTIVE PDF ENGINE ---
   const handleExportPDF = () => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-
-    // CULORI
     const C_EMERALD = [16, 185, 129];
     const C_DARK = [24, 24, 27];
     const C_GRAY = [113, 113, 122];
     const C_LIGHT_GRAY = [244, 244, 245];
     const C_RED = [239, 68, 68];
-
     let y = 0;
-
-    // --- PAGINA 1: COPERTA & GLOBAL STATS ---
-
-    // Header Decorativ
     doc.setFillColor(...C_DARK);
     doc.rect(0, 0, pageWidth, 60, "F");
-
     doc.setFontSize(30);
     doc.setTextColor(...C_EMERALD);
     doc.text("BudgetFlow", 20, 25);
-
     doc.setFontSize(12);
     doc.setTextColor(255, 255, 255);
     doc.text("RAPORT FINANCIAR COMPLET", 20, 35);
-
     doc.setFontSize(10);
     doc.setTextColor(150, 150, 150);
     doc.text(`Generat la: ${new Date().toLocaleDateString("ro-RO")}`, 20, 45);
-
-    // Global Stats Cards (Desene)
     y = 80;
-
     const drawCard = (x, title, value, sub, color) => {
       doc.setFillColor(250, 250, 250);
       doc.setDrawColor(220, 220, 220);
       doc.roundedRect(x, y, 55, 35, 3, 3, "FD");
-
       doc.setFontSize(9);
       doc.setTextColor(...C_GRAY);
       doc.text(title, x + 5, y + 10);
-
       doc.setFontSize(14);
       doc.setTextColor(...color);
       doc.text(value, x + 5, y + 20);
-
       doc.setFontSize(8);
       doc.setTextColor(180, 180, 180);
       doc.text(sub, x + 5, y + 28);
     };
-
-    // Calcule Globale
     const globalSpent = months.reduce(
       (acc, m) => acc + m.expenses.reduce((a, b) => a + b.val, 0),
       0
@@ -143,7 +127,6 @@ const Sidebar = ({ onAddDefault, onExport, onImport }) => {
       globalBudget > 0
         ? Math.round(((globalBudget - globalSpent) / globalBudget) * 100)
         : 0;
-
     drawCard(
       20,
       "NET WORTH",
@@ -164,35 +147,23 @@ const Sidebar = ({ onAddDefault, onExport, onImport }) => {
       `${savingsRate}%`,
       "Eficienta",
       [59, 130, 246]
-    ); // Blue
-
+    );
     y += 50;
-
-    // --- DETALIERE LUNI ---
     const sortedMonths = [...months].sort((a, b) => b.id - a.id);
-
-    sortedMonths.forEach((month, index) => {
-      // Paginare inteligentă
+    sortedMonths.forEach((month) => {
       if (y > 220) {
         doc.addPage();
         y = 20;
       }
-
       const mSpent = month.expenses.reduce((a, b) => a + b.val, 0);
       const mBudget = month.budget;
       const mPercent = Math.min(100, Math.round((mSpent / mBudget) * 100));
       const mRemaining = mBudget - mSpent;
-
-      // Card Lună (Background)
       doc.setFillColor(...C_LIGHT_GRAY);
       doc.roundedRect(10, y, pageWidth - 20, 40, 4, 4, "F");
-
-      // Titlu Lună
       doc.setFontSize(16);
       doc.setTextColor(0, 0, 0);
       doc.text(removeDiacritics(month.name), 20, y + 12);
-
-      // Buget Info
       doc.setFontSize(10);
       doc.setTextColor(100);
       doc.text(
@@ -200,22 +171,14 @@ const Sidebar = ({ onAddDefault, onExport, onImport }) => {
         20,
         y + 20
       );
-
-      // Bara Progres Vizuală
-      doc.setFillColor(220, 220, 220); // Fundal bara
+      doc.setFillColor(220, 220, 220);
       doc.roundedRect(20, y + 25, 100, 4, 2, 2, "F");
-
-      // Umplere bară (Verde/Roșu)
       if (mPercent > 100) doc.setFillColor(...C_RED);
       else doc.setFillColor(...C_EMERALD);
-
       doc.roundedRect(20, y + 25, mPercent, 4, 2, 2, "F");
       doc.setFontSize(8);
       doc.text(`${mPercent}% Utilizat`, 125, y + 28);
-
       y += 50;
-
-      // Tabel Cheltuieli
       doc.setFontSize(9);
       doc.setTextColor(150);
       doc.text("DESCRIERE", 20, y);
@@ -224,38 +187,26 @@ const Sidebar = ({ onAddDefault, onExport, onImport }) => {
       doc.setDrawColor(230);
       doc.line(20, y + 2, pageWidth - 20, y + 2);
       y += 8;
-
       doc.setTextColor(50);
       month.expenses.forEach((exp) => {
         if (y > 275) {
           doc.addPage();
           y = 20;
         }
-
         let desc = removeDiacritics(exp.desc);
         let cat = removeDiacritics(
           CATEGORY_INFO[exp.category]?.name || "Altele"
         );
         if (desc.length > 40) desc = desc.substring(0, 40) + "...";
-
         doc.text(desc, 20, y);
         doc.text(cat, 100, y);
-
-        // Sumă aliniată dreapta (aproximativ)
-        const sumText = `${exp.val} RON`;
-        doc.text(sumText, 170, y);
-
-        // Linie subtilă
+        doc.text(`${exp.val} RON`, 170, y);
         doc.setDrawColor(245);
         doc.line(20, y + 2, pageWidth - 20, y + 2);
-
         y += 8;
       });
-
-      y += 15; // Spațiu între luni
+      y += 15;
     });
-
-    // Footer
     const totalPages = doc.internal.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
       doc.setPage(i);
@@ -268,7 +219,6 @@ const Sidebar = ({ onAddDefault, onExport, onImport }) => {
       );
       doc.text("Generat cu BudgetFlow Ultimate", 20, pageHeight - 10);
     }
-
     doc.save(`Raport_Executive_${new Date().toISOString().split("T")[0]}.pdf`);
   };
 
@@ -321,14 +271,14 @@ const Sidebar = ({ onAddDefault, onExport, onImport }) => {
             onClick={() => setShowCalc(true)}
             className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium text-zinc-400 hover:bg-zinc-800 hover:text-white transition-all"
           >
-            <FaCalculator /> Calculator Dobândă
+            <FaCalculator /> {t("sidebar.calc_button")}
           </button>
         </div>
 
         <div className="p-4 border-b border-zinc-800">
           <div className="bg-zinc-800/50 rounded-xl p-4 border border-zinc-700">
             <div className="text-xs text-zinc-500 uppercase font-bold mb-1">
-              Net Worth
+              {t("sidebar.net_worth")}
             </div>
             <div
               className={`text-2xl font-bold font-mono ${
@@ -344,12 +294,11 @@ const Sidebar = ({ onAddDefault, onExport, onImport }) => {
 
         <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
           <h3 className="text-xs text-zinc-500 uppercase font-bold mb-3 flex justify-between items-center">
-            Fixe (Recurente)
+            {t("sidebar.fixed_expenses")}
             <span className="bg-zinc-800 text-white text-[10px] px-2 py-0.5 rounded-full">
               {defaultExpenses.length}
             </span>
           </h3>
-
           <div className="space-y-2 mb-4">
             {defaultExpenses.map((def, idx) => (
               <div
@@ -380,7 +329,6 @@ const Sidebar = ({ onAddDefault, onExport, onImport }) => {
               </div>
             ))}
           </div>
-
           <div className="space-y-2 pt-2 border-t border-zinc-800">
             <input
               value={defDesc}
@@ -405,7 +353,7 @@ const Sidebar = ({ onAddDefault, onExport, onImport }) => {
                   .filter((k) => k[0] !== "_total")
                   .map(([k, v]) => (
                     <option key={k} value={k}>
-                      {v.emoji} {v.name}
+                      {v.emoji} {t(`categories.${k}`)}
                     </option>
                   ))}
               </select>
@@ -414,7 +362,7 @@ const Sidebar = ({ onAddDefault, onExport, onImport }) => {
               onClick={handleAddDefault}
               className="w-full py-2 bg-zinc-800 hover:bg-emerald-600 text-zinc-400 hover:text-white rounded-lg text-sm transition-colors flex items-center justify-center gap-2"
             >
-              <FaPlus size={10} /> Adaugă
+              <FaPlus size={10} /> {t("sidebar.add_button")}
             </button>
           </div>
         </div>
@@ -424,7 +372,7 @@ const Sidebar = ({ onAddDefault, onExport, onImport }) => {
             onClick={handleExportPDF}
             className="flex-1 py-2 bg-emerald-900/30 hover:bg-emerald-900/50 border border-emerald-500/30 rounded text-xs text-emerald-400 hover:text-emerald-200 transition-colors flex items-center justify-center gap-2"
           >
-            <FaFileExport /> PDF Raport
+            <FaFileExport /> {t("sidebar.export_pdf")}
           </button>
           <button
             onClick={() => {
@@ -433,7 +381,7 @@ const Sidebar = ({ onAddDefault, onExport, onImport }) => {
             }}
             className="flex-1 py-2 bg-zinc-800 hover:bg-zinc-700 rounded text-xs text-zinc-400 hover:text-white transition-colors flex items-center justify-center gap-2"
           >
-            <FaFileImport /> JSON
+            <FaFileImport /> {t("sidebar.export_json")}
           </button>
         </div>
       </aside>

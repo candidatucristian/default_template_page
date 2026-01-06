@@ -1,0 +1,116 @@
+{
+  "header": {
+    "zen_mode": "Zen Mode",
+    "exit_zen": "Exit Zen",
+    "budget_available": "BUDGET AVAILABLE TODAY"
+  },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "savings": "Savings & Wealth",
+    "reports": "Advanced Reports",
+    "compare": "Compare Months",
+    "calendar": "Calendar",
+    "goals": "Goals",
+    "debts": "Debts",
+    "insights": "Insights",
+    "calc_button": "Interest Calc",
+    "net_worth": "Net Worth",
+    "fixed_expenses": "Fixed (Recurring)",
+    "add_button": "Add",
+    "export_pdf": "PDF Report",
+    "export_json": "JSON"
+  },
+  "dashboard": {
+    "archive_title": "Month Archive",
+    "grid_view": "Grid",
+    "list_view": "List",
+    "stats": {
+      "balance": "Total Balance",
+      "total_spent": "Total Spent",
+      "savings_rate": "Savings Rate",
+      "active_months": "Active Months",
+      "financial_trend": "Financial Trend",
+      "category_dist": "Category Distribution"
+    }
+  },
+  "month_card": {
+    "available_of": "Available of",
+    "spent": "Spent",
+    "sync_btn": "Add missing recurring expenses",
+    "empty_state": "No expenses",
+    "menu": {
+      "edit_budget": "Edit Budget",
+      "duplicate": "Duplicate Month",
+      "delete": "Delete Month"
+    }
+  },
+  "savings": {
+    "total_net_worth": "Total Net Worth",
+    "total_assets": "Total Assets",
+    "add_btn": "Add",
+    "empty_list": "Empty list",
+    "sections": {
+      "cash": {
+        "title": "Liquidity",
+        "subtitle": "Emergency funds, Current accounts, Cash"
+      },
+      "invest": {
+        "title": "Investments",
+        "subtitle": "Stocks, Crypto, ETFs"
+      },
+      "assets": {
+        "title": "Fixed Assets",
+        "subtitle": "Real Estate, Gold, Jewelry, Cars"
+      },
+      "windfall": {
+        "title": "Misc",
+        "subtitle": "Inheritance, Bonuses, Lottery"
+      }
+    },
+    "modal": {
+      "add_title": "Add",
+      "edit_title": "Edit",
+      "name_label": "Name",
+      "details_label": "Details (Optional)",
+      "save_btn": "Save"
+    }
+  },
+  "expense_modal": {
+    "add_title": "New Expense",
+    "edit_title": "Edit Expense",
+    "desc_label": "Description",
+    "amount_label": "Amount (RON)",
+    "category_label": "Category",
+    "date_label": "Date",
+    "time_label": "Time",
+    "tags_label": "Tags (comma separated)",
+    "note_label": "Note / Info",
+    "cancel_btn": "Cancel",
+    "save_btn": "Save",
+    "add_btn": "Add"
+  },
+  "categories": {
+    "housing": "Housing",
+    "utilities": "Utilities",
+    "subscriptions": "Subscriptions",
+    "transport": "Transport",
+    "food": "Food",
+    "entertainment": "Entertainment",
+    "shopping": "Shopping",
+    "health": "Health",
+    "other": "Other",
+    "total": "Total"
+  },
+  "calendar": {
+    "total": "Total",
+    "today": "TODAY",
+    "weekdays": ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"],
+    "free": "FREE",
+    "selected_day": "Selected Day",
+    "add_expense_btn": "Add to this day",
+    "day_total": "Day Total",
+    "no_expenses": "No expenses!",
+    "select_day_title": "Select a day",
+    "select_day_subtitle": "To see details and add expenses."
+  }
+}

@@ -1,5 +1,6 @@
 import React from "react";
 import { useBudget } from "../../context/BudgetContext";
+import { useTranslation } from "react-i18next";
 import {
   calculateGlobalStats,
   calculateRunningBalance,
@@ -15,32 +16,27 @@ import {
   PieChart,
   Pie,
   Cell,
-  BarChart,
-  Bar,
 } from "recharts";
 import { motion } from "framer-motion";
 
 const DashboardStats = () => {
+  const { t } = useTranslation();
   const { state } = useBudget();
   const { months } = state;
 
   const stats = calculateGlobalStats(months);
   const runningBalance = calculateRunningBalance(months);
 
-  // Date pentru Chart
   const chartData = [...months]
     .sort((a, b) => a.id - b.id)
-    .slice(-12) // Arată ultimul an
+    .slice(-12)
     .map((m) => {
       const spent = m.expenses.reduce((acc, curr) => acc + curr.val, 0);
       return { name: m.name.split(" ")[0], Cheltuit: spent, Buget: m.budget };
     });
 
   const categoryData = Object.entries(stats.categoryTotals || {})
-    .map(([key, value]) => ({
-      name: key,
-      value: value,
-    }))
+    .map(([key, value]) => ({ name: key, value: value }))
     .filter((x) => x.name !== "_total" && x.value > 0);
 
   const COLORS = [
@@ -62,29 +58,28 @@ const DashboardStats = () => {
 
   return (
     <div className="space-y-6 mb-8">
-      {/* Top Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           {
-            label: "Balanță Totală",
+            label: t("dashboard.stats.balance"),
             val: `${runningBalance} RON`,
             color: "emerald",
             sub: "Net Worth",
           },
           {
-            label: "Cheltuit Total",
+            label: t("dashboard.stats.total_spent"),
             val: `${stats.totalSpent} RON`,
             color: "red",
             sub: "Lifetime",
           },
           {
-            label: "Rată Economisire",
+            label: t("dashboard.stats.savings_rate"),
             val: `${Math.round(stats.savingsRate)}%`,
             color: "amber",
             sub: "Eficiență",
           },
           {
-            label: "Luni Active",
+            label: t("dashboard.stats.active_months"),
             val: months.length,
             color: "blue",
             sub: "Istoric",
@@ -115,16 +110,14 @@ const DashboardStats = () => {
         ))}
       </div>
 
-      {/* Main Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Area Chart - Spending Trend */}
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           className="lg:col-span-2 bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6 h-[450px]"
         >
           <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-            📈 Trend Financiar
+            📈 {t("dashboard.stats.financial_trend")}
           </h3>
           <ResponsiveContainer width="100%" height="90%">
             <AreaChart
@@ -182,7 +175,6 @@ const DashboardStats = () => {
           </ResponsiveContainer>
         </motion.div>
 
-        {/* Pie Chart - Distribution */}
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -190,7 +182,7 @@ const DashboardStats = () => {
           className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6 h-[450px] flex flex-col"
         >
           <h3 className="text-lg font-bold text-white mb-4">
-            Distribuție Categorii
+            {t("dashboard.stats.category_dist")}
           </h3>
           <div className="flex-1">
             <ResponsiveContainer width="100%" height="100%">
@@ -229,7 +221,7 @@ const DashboardStats = () => {
                   className="w-2 h-2 rounded-full"
                   style={{ backgroundColor: COLORS[i % COLORS.length] }}
                 />
-                <span className="truncate">{c.name}</span>
+                <span className="truncate">{t(`categories.${c.name}`)}</span>
               </div>
             ))}
           </div>

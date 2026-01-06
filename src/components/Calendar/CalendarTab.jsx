@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { useBudget } from "../../context/BudgetContext";
+import { useTranslation } from "react-i18next";
 import { CATEGORY_INFO } from "../../utils/constants";
 import {
   FaChevronLeft,
@@ -13,6 +14,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 
 const CalendarTab = ({ onAddExpense }) => {
+  const { t, i18n } = useTranslation();
   const { state } = useBudget();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
@@ -49,25 +51,14 @@ const CalendarTab = ({ onAddExpense }) => {
   const getDaysInMonth = (y, m) => new Date(y, m + 1, 0).getDate();
   const getFirstDayOfMonth = (y, m) => {
     const day = new Date(y, m, 1).getDay();
-    return day === 0 ? 6 : day - 1;
+    return day === 0 ? 6 : day - 1; // 0=Du, 1=Lu -> Vrem Lu=0, Du=6
   };
 
   const daysInMonth = getDaysInMonth(year, month);
   const firstDay = getFirstDayOfMonth(year, month);
-  const roMonthNames = [
-    "Ianuarie",
-    "Februarie",
-    "Martie",
-    "Aprilie",
-    "Mai",
-    "Iunie",
-    "Iulie",
-    "August",
-    "Septembrie",
-    "Octombrie",
-    "Noiembrie",
-    "Decembrie",
-  ];
+
+  // Obținem zilele săptămânii din traduceri (array)
+  const weekDays = t("calendar.weekdays", { returnObjects: true });
 
   const getIntensityColor = (amount) => {
     if (amount === 0) return "bg-zinc-900/50 border-zinc-800";
@@ -89,11 +80,14 @@ const CalendarTab = ({ onAddExpense }) => {
         <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
           <div>
             <h2 className="text-3xl font-black text-white capitalize flex items-center gap-3">
-              {roMonthNames[month]}{" "}
+              {/* Numele lunii tradus automat de JS */}
+              {new Date(year, month).toLocaleString(i18n.language, {
+                month: "long",
+              })}{" "}
               <span className="text-zinc-600 font-light">{year}</span>
             </h2>
             <p className="text-zinc-400 text-sm mt-1">
-              Total:{" "}
+              {t("calendar.total")}:{" "}
               <span className="text-white font-mono font-bold bg-zinc-800 px-2 rounded-md">
                 {monthlyTotal.toLocaleString()} RON
               </span>
@@ -110,7 +104,7 @@ const CalendarTab = ({ onAddExpense }) => {
               onClick={() => setCurrentDate(new Date())}
               className="px-4 text-xs font-bold text-zinc-500 hover:text-white"
             >
-              AZI
+              {t("calendar.today")}
             </button>
             <button
               onClick={() => setCurrentDate(new Date(year, month + 1))}
@@ -122,7 +116,7 @@ const CalendarTab = ({ onAddExpense }) => {
         </div>
 
         <div className="grid grid-cols-7 mb-4">
-          {["Lu", "Ma", "Mi", "Jo", "Vi", "Sâ", "Du"].map((d, i) => (
+          {weekDays.map((d, i) => (
             <div
               key={i}
               className={`text-center text-xs font-bold uppercase tracking-widest ${
@@ -190,7 +184,7 @@ const CalendarTab = ({ onAddExpense }) => {
                   ) : (
                     <div className="h-full flex items-center justify-center opacity-0 group-hover:opacity-20">
                       <span className="text-xs text-zinc-500 font-bold">
-                        FREE
+                        {t("calendar.free")}
                       </span>
                     </div>
                   )}
@@ -214,16 +208,16 @@ const CalendarTab = ({ onAddExpense }) => {
             <div className="flex justify-between items-start mb-6">
               <div>
                 <div className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-1">
-                  Ziua Selectată
+                  {t("calendar.selected_day")}
                 </div>
                 <h3 className="text-2xl font-bold text-white">
-                  {new Date(selectedDate).toLocaleDateString("ro-RO", {
+                  {new Date(selectedDate).toLocaleDateString(i18n.language, {
                     day: "numeric",
                     month: "long",
                   })}
                 </h3>
                 <div className="text-zinc-400 text-sm capitalize">
-                  {new Date(selectedDate).toLocaleDateString("ro-RO", {
+                  {new Date(selectedDate).toLocaleDateString(i18n.language, {
                     weekday: "long",
                   })}
                 </div>
@@ -241,11 +235,13 @@ const CalendarTab = ({ onAddExpense }) => {
               onClick={() => onAddExpense(selectedDate)}
               className="w-full mb-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg transition-transform active:scale-95"
             >
-              <FaPlus /> Adaugă în această zi
+              <FaPlus /> {t("calendar.add_expense_btn")}
             </button>
 
             <div className="bg-zinc-800/50 p-4 rounded-xl border border-zinc-700/50 mb-4 text-center">
-              <span className="text-zinc-400 text-xs uppercase">Total Zi</span>
+              <span className="text-zinc-400 text-xs uppercase">
+                {t("calendar.day_total")}
+              </span>
               <div className="text-3xl font-mono font-bold text-white mt-1">
                 {expensesByDate[selectedDate]?.total.toLocaleString() || 0}{" "}
                 <span className="text-sm text-emerald-500">RON</span>
@@ -258,7 +254,7 @@ const CalendarTab = ({ onAddExpense }) => {
                 <div className="h-full flex flex-col items-center justify-center text-zinc-600 opacity-60">
                   <FaStar className="text-5xl text-yellow-500 mb-3" />
                   <p className="text-center text-sm font-medium">
-                    Nicio cheltuială!
+                    {t("calendar.no_expenses")}
                   </p>
                 </div>
               ) : (
@@ -276,7 +272,8 @@ const CalendarTab = ({ onAddExpense }) => {
                           {exp.desc}
                         </div>
                         <div className="text-[10px] text-zinc-500">
-                          {CATEGORY_INFO[exp.category]?.name}
+                          {t(`categories.${exp.category}`) ||
+                            CATEGORY_INFO[exp.category]?.name}
                         </div>
                       </div>
                     </div>
@@ -293,9 +290,11 @@ const CalendarTab = ({ onAddExpense }) => {
             <div className="w-20 h-20 bg-zinc-800 rounded-full flex items-center justify-center mb-4 animate-pulse">
               <span className="text-3xl">👆</span>
             </div>
-            <h3 className="text-lg font-bold text-white">Selectează o zi</h3>
+            <h3 className="text-lg font-bold text-white">
+              {t("calendar.select_day_title")}
+            </h3>
             <p className="text-zinc-500 text-sm">
-              Pentru a vedea detalii și a adăuga cheltuieli.
+              {t("calendar.select_day_subtitle")}
             </p>
           </div>
         )}

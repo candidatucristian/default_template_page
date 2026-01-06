@@ -1,0 +1,116 @@
+{
+  "header": {
+    "zen_mode": "Zen Mode",
+    "exit_zen": "Ieșire Zen",
+    "budget_available": "BUGET DISPONIBIL AZI"
+  },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "savings": "Economii & Avere",
+    "reports": "Rapoarte Avansate",
+    "compare": "Compară Luni",
+    "calendar": "Calendar",
+    "goals": "Obiective",
+    "debts": "Datorii",
+    "insights": "Insights",
+    "calc_button": "Calculator Dobândă",
+    "net_worth": "Net Worth",
+    "fixed_expenses": "Fixe (Recurente)",
+    "add_button": "Adaugă",
+    "export_pdf": "PDF Raport",
+    "export_json": "JSON"
+  },
+  "dashboard": {
+    "archive_title": "Arhivă Luni",
+    "grid_view": "Grid",
+    "list_view": "Listă",
+    "stats": {
+      "balance": "Balanță Totală",
+      "total_spent": "Cheltuit Total",
+      "savings_rate": "Rată Economisire",
+      "active_months": "Luni Active",
+      "financial_trend": "Trend Financiar",
+      "category_dist": "Distribuție Categorii"
+    }
+  },
+  "month_card": {
+    "available_of": "Disponibil din",
+    "spent": "Cheltuit",
+    "sync_btn": "Adaugă cheltuieli recurente lipsă",
+    "empty_state": "Nicio cheltuială",
+    "menu": {
+      "edit_budget": "Modifică Buget",
+      "duplicate": "Duplică Luna",
+      "delete": "Șterge Luna"
+    }
+  },
+  "savings": {
+    "total_net_worth": "Avere Netă Totală",
+    "total_assets": "Active Totale",
+    "add_btn": "Adaugă",
+    "empty_list": "Listă goală",
+    "sections": {
+      "cash": {
+        "title": "Lichidități",
+        "subtitle": "Fonduri de urgență, conturi curente, Cash"
+      },
+      "invest": {
+        "title": "Investiții",
+        "subtitle": "Acțiuni, Crypto, ETF-uri"
+      },
+      "assets": {
+        "title": "Active Fixe",
+        "subtitle": "Imobiliare, Aur, Bijuterii, Mașini"
+      },
+      "windfall": {
+        "title": "Diverse",
+        "subtitle": "Moșteniri, Bonusuri, Câștiguri Loto"
+      }
+    },
+    "modal": {
+      "add_title": "Adaugă",
+      "edit_title": "Modifică",
+      "name_label": "Denumire",
+      "details_label": "Detalii (Opțional)",
+      "save_btn": "Salvează"
+    }
+  },
+  "expense_modal": {
+    "add_title": "Cheltuială Nouă",
+    "edit_title": "Editează Cheltuiala",
+    "desc_label": "Descriere",
+    "amount_label": "Sumă (RON)",
+    "category_label": "Categorie",
+    "date_label": "Data",
+    "time_label": "Ora",
+    "tags_label": "Tags (separate prin virgulă)",
+    "note_label": "Notă / Info",
+    "cancel_btn": "Anulează",
+    "save_btn": "Salvează",
+    "add_btn": "Adaugă"
+  },
+  "categories": {
+    "housing": "Locuință",
+    "utilities": "Utilități",
+    "subscriptions": "Abonamente",
+    "transport": "Transport",
+    "food": "Mâncare",
+    "entertainment": "Divertisment",
+    "shopping": "Cumpărături",
+    "health": "Sănătate",
+    "other": "Altele",
+    "total": "Total"
+  },
+  "calendar": {
+    "total": "Total",
+    "today": "AZI",
+    "weekdays": ["Lu", "Ma", "Mi", "Jo", "Vi", "Sâ", "Du"],
+    "free": "LIBER",
+    "selected_day": "Ziua Selectată",
+    "add_expense_btn": "Adaugă în această zi",
+    "day_total": "Total Zi",
+    "no_expenses": "Nicio cheltuială!",
+    "select_day_title": "Selectează o zi",
+    "select_day_subtitle": "Pentru a vedea detalii și a adăuga cheltuieli."
+  }
+}

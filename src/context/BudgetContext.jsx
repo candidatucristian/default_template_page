@@ -10,6 +10,7 @@ const initialState = {
   budgetStops: JSON.parse(localStorage.getItem("bf2_stops")) || [],
   goals: JSON.parse(localStorage.getItem("bf2_goals")) || [],
   debts: JSON.parse(localStorage.getItem("bf2_debts")) || [],
+  savings: JSON.parse(localStorage.getItem("bf2_savings")) || [],
   alerts: [],
   dismissedIds: [],
   settings: JSON.parse(localStorage.getItem("bf2_settings")) || {
@@ -36,7 +37,35 @@ function budgetReducer(state, action) {
         alerts: state.alerts.filter((a) => a.id !== action.payload),
         dismissedIds: [...state.dismissedIds, action.payload],
       };
-
+    case "ADD_SAVING":
+      return {
+        ...state,
+        savings: [...state.savings, { ...action.payload, id: generateId() }],
+      };
+    case "DELETE_SAVING":
+      return {
+        ...state,
+        savings: state.savings.filter((s) => s.id !== action.payload),
+      };
+    // AM SCHIMBAT ACEST CAZ PENTRU A FI MAI GENERAL (UPDATE COMPLET)
+    case "UPDATE_SAVING":
+      return {
+        ...state,
+        savings: state.savings.map((s) =>
+          s.id === action.payload.id
+            ? { ...s, ...action.payload.updatedData }
+            : s
+        ),
+      };
+    case "UPDATE_SAVING_VALUE":
+      return {
+        ...state,
+        savings: state.savings.map((s) =>
+          s.id === action.payload.id
+            ? { ...s, amount: action.payload.amount }
+            : s
+        ),
+      };
     case "ADD_MONTH": {
       const { name, budget } = action.payload;
 
@@ -293,7 +322,29 @@ function budgetReducer(state, action) {
         }),
       };
     }
-
+    case "ADD_INVESTMENT":
+      return {
+        ...state,
+        investments: [
+          ...state.investments,
+          { ...action.payload, id: generateId() },
+        ],
+      };
+    case "DELETE_INVESTMENT":
+      return {
+        ...state,
+        investments: state.investments.filter((i) => i.id !== action.payload),
+      };
+    case "UPDATE_INVESTMENT_PRICE":
+      // Actualizăm prețul curent al unui activ
+      return {
+        ...state,
+        investments: state.investments.map((i) =>
+          i.id === action.payload.id
+            ? { ...i, currentPrice: action.payload.price }
+            : i
+        ),
+      };
     default:
       return state;
   }
@@ -301,6 +352,19 @@ function budgetReducer(state, action) {
 
 export function BudgetProvider({ children }) {
   const [state, dispatch] = useReducer(budgetReducer, initialState);
+  useEffect(
+    () =>
+      localStorage.setItem(
+        "bf2_investments",
+        JSON.stringify(state.investments)
+      ),
+    [state.investments]
+  );
+
+  useEffect(
+    () => localStorage.setItem("bf2_savings", JSON.stringify(state.savings)),
+    [state.savings]
+  );
 
   // Persistence
   useEffect(
