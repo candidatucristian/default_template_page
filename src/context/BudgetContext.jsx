@@ -10,14 +10,14 @@ const initialState = {
   budgetStops: JSON.parse(localStorage.getItem("bf2_stops")) || [],
   goals: JSON.parse(localStorage.getItem("bf2_goals")) || [],
   debts: JSON.parse(localStorage.getItem("bf2_debts")) || [],
-  // --- NOUTATI: Alerte si Setari ---
   alerts: [],
+  dismissedIds: [],
   settings: JSON.parse(localStorage.getItem("bf2_settings")) || {
-    hourlyWage: 50, // RON pe oră
-    monthlyLimit: 80, // % pentru alertă
+    hourlyWage: 50,
+    monthlyLimit: 85,
   },
   activeTab: "dashboard",
-  currentView: "kanban", // Default pe Kanban pt Drag&Drop
+  currentView: "grid",
 };
 
 function budgetReducer(state, action) {
@@ -27,27 +27,65 @@ function budgetReducer(state, action) {
     case "SET_VIEW":
       return { ...state, currentView: action.payload };
 
-    // --- ALERTE ---
-    case "ADD_ALERT":
-      if (state.alerts.find((a) => a.id === action.payload.id)) return state;
-      return { ...state, alerts: [action.payload, ...state.alerts] };
-    case "CLEAR_ALERTS":
-      return { ...state, alerts: [] };
+    case "SET_ALERTS":
+      return { ...state, alerts: action.payload };
 
-    // --- STANDARD ---
+    case "DISMISS_ALERT":
+      return {
+        ...state,
+        alerts: state.alerts.filter((a) => a.id !== action.payload),
+        dismissedIds: [...state.dismissedIds, action.payload],
+      };
+
     case "ADD_MONTH": {
       const { name, budget } = action.payload;
+
+      // Prevent duplicates
+      if (state.months.some((m) => m.name === name)) return state;
+
       const color = MONTH_COLORS[state.months.length % MONTH_COLORS.length];
-      const dt = getCurrentDateTime();
-      // Copiem cheltuielile fixe automat
+
+      // Fix Data: 1 ale lunii
+      let expenseDate = getCurrentDateTime().isoDate;
+      try {
+        const parts = name.split(" ");
+        if (parts.length === 2) {
+          const roMonths = [
+            "Ianuarie",
+            "Februarie",
+            "Martie",
+            "Aprilie",
+            "Mai",
+            "Iunie",
+            "Iulie",
+            "August",
+            "Septembrie",
+            "Octombrie",
+            "Noiembrie",
+            "Decembrie",
+          ];
+          const mIndex = roMonths.indexOf(parts[0]);
+          if (mIndex !== -1) {
+            const year = parts[1];
+            const mStr = String(mIndex + 1).padStart(2, "0");
+            expenseDate = `${year}-${mStr}-01`;
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+
+      // Adăugăm recurențele
       const startingExpenses = state.defaultExpenses.map((d) => ({
         ...d,
-        id: generateId() + Math.random(), // ID unic
-        date: dt.isoDate, // Format ISO YYYY-MM-DD
-        time: dt.time,
-        tags: [],
-        note: "Cheltuială fixă",
+        id: generateId() + Math.random(),
+        date: expenseDate,
+        time: "09:00",
+        tags: ["fix"],
+        note: "Cheltuială fixă (Recurentă)",
+        isFixed: true,
       }));
+
       const newMonth = {
         id: generateId(),
         name,
@@ -88,13 +126,16 @@ function budgetReducer(state, action) {
     case "ADD_EXPENSE": {
       const { monthId, expense } = action.payload;
       const dt = getCurrentDateTime();
+      const dateToUse = expense.date || dt.isoDate;
+
       const newExpense = {
         id: generateId(),
         ...expense,
-        date: expense.date || dt.isoDate,
+        date: dateToUse,
         time: expense.time || dt.isoTime,
         tags: expense.tags || [],
         note: expense.note || "",
+        isFixed: false,
       };
       return {
         ...state,
@@ -149,7 +190,6 @@ function budgetReducer(state, action) {
           (_, i) => i !== action.payload
         ),
       };
-
     case "ADD_GOAL":
       return {
         ...state,
@@ -169,7 +209,6 @@ function budgetReducer(state, action) {
         ...state,
         goals: state.goals.filter((g) => g.id !== action.payload),
       };
-
     case "ADD_DEBT":
       return {
         ...state,
@@ -190,9 +229,70 @@ function budgetReducer(state, action) {
         ...state,
         debts: state.debts.filter((d) => d.id !== action.payload),
       };
-
     case "IMPORT_DATA":
       return { ...state, ...action.payload };
+
+    case "SYNC_RECURRING": {
+      const { monthId } = action.payload;
+      return {
+        ...state,
+        months: state.months.map((m) => {
+          if (m.id !== monthId) return m;
+
+          // 1. Calcul Data
+          let expenseDate = getCurrentDateTime().isoDate;
+          try {
+            const parts = m.name.split(" ");
+            const roMonths = [
+              "Ianuarie",
+              "Februarie",
+              "Martie",
+              "Aprilie",
+              "Mai",
+              "Iunie",
+              "Iulie",
+              "August",
+              "Septembrie",
+              "Octombrie",
+              "Noiembrie",
+              "Decembrie",
+            ];
+            const mIndex = roMonths.indexOf(parts[0]);
+
+            if (mIndex !== -1 && parts[1]) {
+              const year = parseInt(parts[1]);
+              const targetDate = new Date(year, mIndex, 2);
+              expenseDate = targetDate.toISOString().split("T")[0];
+            }
+          } catch (e) {
+            console.error("Sync error", e);
+          }
+
+          // 2. Găsim ce lipsește
+          const missingDefaults = state.defaultExpenses.filter(
+            (def) =>
+              !m.expenses.some(
+                (exp) => exp.desc === def.desc && exp.val === def.val
+              )
+          );
+
+          if (missingDefaults.length === 0) return m;
+
+          // 3. Adăugăm
+          const newExpenses = missingDefaults.map((d) => ({
+            ...d,
+            id: generateId() + Math.random(),
+            date: expenseDate,
+            time: "09:00",
+            tags: ["fix", "sync"],
+            note: "Cheltuială fixă (Sincronizată)",
+            isFixed: true,
+          }));
+
+          return { ...m, expenses: [...m.expenses, ...newExpenses] };
+        }),
+      };
+    }
 
     default:
       return state;
@@ -228,30 +328,35 @@ export function BudgetProvider({ children }) {
     [state.settings]
   );
 
-  // --- ALERTS CHECKER (Rulează la fiecare schimbare) ---
+  // SMART ALERTS
   useEffect(() => {
-    dispatch({ type: "CLEAR_ALERTS" });
+    const newAlerts = [];
     state.months.forEach((month) => {
       const totalSpent = month.expenses.reduce((acc, e) => acc + e.val, 0);
       const percent = month.budget > 0 ? (totalSpent / month.budget) * 100 : 0;
 
       if (percent >= state.settings.monthlyLimit) {
-        dispatch({
-          type: "ADD_ALERT",
-          payload: {
-            id: `alert-${month.id}`,
+        const id = `limit-${month.id}`;
+        if (!state.dismissedIds.includes(id)) {
+          newAlerts.push({
+            id,
             type: percent > 100 ? "danger" : "warning",
+            title: percent > 100 ? "Buget Depășit!" : "Atenție Buget",
             message:
               percent > 100
-                ? `🚨 Ai depășit bugetul pentru ${month.name}!`
-                : `⚠️ Atenție! Ai cheltuit ${Math.round(
-                    percent
-                  )}% din bugetul pe ${month.name}.`,
-          },
-        });
+                ? `Ai depășit bugetul pentru ${month.name}!`
+                : `Ai ajuns la ${Math.round(percent)}% din buget (${
+                    month.name
+                  }).`,
+          });
+        }
       }
     });
-  }, [state.months, state.settings.monthlyLimit]);
+
+    if (JSON.stringify(newAlerts) !== JSON.stringify(state.alerts)) {
+      dispatch({ type: "SET_ALERTS", payload: newAlerts });
+    }
+  }, [state.months, state.settings.monthlyLimit, state.dismissedIds]);
 
   return (
     <BudgetContext.Provider value={{ state, dispatch }}>
